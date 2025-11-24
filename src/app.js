@@ -20,6 +20,10 @@ app.post("/users", (req, res) => {
     res.json({ message: "User created" });
 });
 
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/frontend.html");
+});
+
 // READ USERS
 app.get("/users", (req, res) => res.json(users));
 
@@ -38,9 +42,16 @@ app.delete("/users/:id", (req, res) => {
 });
 
 
+// Endpoint DELETE de prueba para la rama feature/delete-user
+app.delete("/delete-test", (req, res) => {
+    res.json({ msg: "Delete working" });
+});
+
+
 app.put("/update-test", (req, res) => res.json({ msg: "Update working" }));
 
 app.get("/read-test", (req, res) => res.json({ msg: "Read working" }));
+
 
 
 
