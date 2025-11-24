@@ -1,61 +1,282 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Frontend Test</title>
+    <title>CRUD Frontend</title>
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial;
-            background: #f4f4f4;
             margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
         }
-
         .card {
             background: white;
-            padding: 30px;
+            width: min(560px, 100%);
+            padding: 32px;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 350px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
         }
-
-        h1 {
-            margin-top: 0;
-            color: #333;
+        h1 { margin: 0 0 8px; }
+        p { margin: 0 0 16px; color: #555; }
+        form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
         }
-
-        p {
-            color: #555;
-        }
-
-        .btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 18px;
-            background: #007bff;
-            color: white;
-            border-radius: 6px;
-            text-decoration: none;
+        input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 15px;
         }
-
-        .btn:hover {
-            background: #0056d6;
+        input:focus {
+            outline: 2px solid #007bff33;
+            border-color: #007bff;
+        }
+        button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #007bff;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            color: #555;
+            font-size: 14px;
+        }
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .edit-btn {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .edit-btn:hover { background: #c7d7fd; }
+        .tag {
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 12px;
+        }
+        .delete-btn {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #fca5a5;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .delete-btn:hover { background: #fecdd3; }
+        .empty {
+            text-align: center;
+            color: #777;
+            padding: 12px;
+        }
+        @media (max-width: 600px) {
+            form { flex-direction: column; }
+            button { width: 100%; }
         }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h1>Frontend Working 🚀</h1>
-        <p>Your GitFlow frontend is ready and looking good!</p>
-        <a class="btn" href="/users">View Users (JSON)</a>
+        <h1>Agregar usuarios</h1>
+        <p>Crear usuarios y ver la lista consumiendo el backend.</p>
+
+        <div id="status" class="status">Cargando usuarios...</div>
+
+        <form id="user-form" autocomplete="off">
+            <input id="name" name="name" type="text" placeholder="Nombre del usuario" />
+            <button id="submit-btn" type="submit">Agregar</button>
+        </form>
+
+        <ul id="user-list"></ul>
     </div>
 
+    <script>
+        (() => {
+            const form = document.getElementById("user-form");
+            const nameInput = document.getElementById("name");
+            const list = document.getElementById("user-list");
+            const status = document.getElementById("status");
+            const submitBtn = document.getElementById("submit-btn");
+
+            const setStatus = (message) => {
+                if (status) status.textContent = message;
+            };
+
+            const escapeText = (value = "") => (
+                `${value}`.replace(/[&<>"']/g, (char) => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                })[char] || char)
+            );
+
+            const encodeAttr = (value = "") => encodeURIComponent(value);
+            const decodeAttr = (value = "") => {
+                try { return decodeURIComponent(value); } catch (_) { return value; }
+            };
+
+            const renderUsers = (users = []) => {
+                if (!list) return;
+                if (!Array.isArray(users) || users.length === 0) {
+                    list.innerHTML = '<li class="empty">No hay usuarios</li>';
+                    return;
+                }
+
+                list.innerHTML = users.map((user, index) => `
+                    <li>
+                        <span>${escapeText(user && user.name ? user.name : "Usuario sin nombre")}</span>
+                        <div class="row">
+                            <span class="tag">#${index + 1}</span>
+                            <button class="edit-btn" data-index="${index}" data-name="${encodeAttr(user && user.name ? user.name : "")}">Editar</button>
+                            <button class="delete-btn" data-index="${index}">Eliminar</button>
+                        </div>
+                    </li>
+                `).join("");
+            };
+
+            const loadUsers = async () => {
+                setStatus("Cargando usuarios...");
+                try {
+                    const response = await fetch("/users");
+                    const data = await response.json();
+                    renderUsers(data);
+                    setStatus("Lista actualizada");
+                } catch (err) {
+                    console.error(err);
+                    renderUsers([]);
+                    setStatus("No pudimos cargar los usuarios");
+                }
+            };
+
+            form?.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const name = nameInput?.value.trim() || "";
+                if (!name) {
+                    setStatus("Ingresa un nombre");
+                    nameInput?.focus();
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                setStatus("Guardando usuario...");
+
+                try {
+                    const response = await fetch("/users", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name })
+                    });
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload?.error || "No se pudo crear");
+
+                    nameInput.value = "";
+                    setStatus("Usuario creado");
+                    await loadUsers();
+                } catch (err) {
+                    console.error(err);
+                    setStatus(err.message || "Error al crear el usuario");
+                } finally {
+                    submitBtn.disabled = false;
+                }
+            });
+
+            list?.addEventListener("click", async (event) => {
+                const target = event.target;
+                const index = target?.getAttribute("data-index");
+                if (index === null) return;
+
+                if (target.classList.contains("delete-btn")) {
+                    setStatus("Eliminando usuario...");
+                    try {
+                        const response = await fetch(`/users/${index}`, { method: "DELETE" });
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(payload?.error || "No se pudo eliminar");
+                        setStatus("Usuario eliminado");
+                        await loadUsers();
+                    } catch (err) {
+                        console.error(err);
+                        setStatus(err.message || "Error al eliminar el usuario");
+                    }
+                }
+
+                if (target.classList.contains("edit-btn")) {
+                    const currentName = decodeAttr(target.getAttribute("data-name") || "");
+                    const newName = window.prompt("Nuevo nombre del usuario", currentName);
+                    if (newName === null) return;
+                    const trimmed = newName.trim();
+                    if (!trimmed) {
+                        setStatus("Ingresa un nombre valido para actualizar");
+                        return;
+                    }
+
+                    setStatus("Actualizando usuario...");
+                    try {
+                        const response = await fetch(`/users/${index}`, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ name: trimmed })
+                        });
+                        const payload = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(payload?.error || "No se pudo actualizar");
+                        setStatus("Usuario actualizado");
+                        await loadUsers();
+                    } catch (err) {
+                        console.error(err);
+                        setStatus(err.message || "Error al actualizar el usuario");
+                    }
+                }
+            });
+
+            loadUsers();
+        })();
+    </script>
 </body>
 </html>
