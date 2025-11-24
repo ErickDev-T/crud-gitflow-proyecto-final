@@ -37,4 +37,11 @@ app.delete("/users/:id", (req, res) => {
     res.json({ message: "User deleted" });
 });
 
+app.delete("/delete-test", (req, res) => res.json({ msg: "Delete working" }));
+
+// Endpoint DELETE de prueba para la rama feature/delete-user
+app.delete("/delete-test", (req, res) => {
+    res.json({ msg: "Delete working" });
+});
+
 app.listen(3000, () => console.log("CRUD running on 3000"));
