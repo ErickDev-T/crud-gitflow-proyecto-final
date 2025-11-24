@@ -20,6 +20,10 @@ app.post("/users", (req, res) => {
     res.json({ message: "User created" });
 });
 
+app.get("/", (req, res) => {
+    res.sendFile(__dirname + "/frontend.html");
+});
+
 // READ USERS
 app.get("/users", (req, res) => res.json(users));
 
