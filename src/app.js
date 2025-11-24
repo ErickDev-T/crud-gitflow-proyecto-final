@@ -6,7 +6,10 @@ app.use(express.json());
 
 app.post("/create-test", (req, res) => res.json({ msg: "Create working" }));
 
-let users = [];
+let users = [
+  { name: "Erick" },
+  { name: "Valery" }
+];
 
 // CREATE USER
 app.post("/users", (req, res) => {
