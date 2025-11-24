@@ -1,3 +1,6 @@
+app.post("/create-test", (req, res) => res.json({ msg: "Create working" }));
+
+
 const express = require("express");
 const app = express();
 app.use(express.json());
@@ -17,7 +20,7 @@ app.put("/users/:id", (req, res) => {
 app.delete("/users/:id", (req, res) => {
     const id = parseInt(req.params.id);
     users.splice(id, 1);
-    res.json({ message: "User deleted" });
+    res.json({ message: "User     deleted" });
 });
 
 app.listen(3000, () => console.log("CRUD running on 3000"));
