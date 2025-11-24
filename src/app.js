@@ -37,7 +37,11 @@ app.delete("/users/:id", (req, res) => {
     res.json({ message: "User deleted" });
 });
 
+
+app.put("/update-test", (req, res) => res.json({ msg: "Update working" }));
+
 app.get("/read-test", (req, res) => res.json({ msg: "Read working" }));
+
 
 
 app.listen(3000, () => console.log("CRUD running on 3000"));
