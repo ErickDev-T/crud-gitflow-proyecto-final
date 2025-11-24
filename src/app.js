@@ -1,19 +1,36 @@
 const express = require("express");
+const { validateUserData } = require("./createUserHelper");
+
 const app = express();
 app.use(express.json());
 
+app.post("/create-test", (req, res) => res.json({ msg: "Create working" }));
+
 let users = [];
 
-app.get("/users", (req, res) => res.json(users));
+// CREATE USER
 app.post("/users", (req, res) => {
+
+    // VALIDACIÓN
+    if (!validateUserData(req.body)) {
+        return res.status(400).json({ error: "Invalid user" });
+    }
+
     users.push(req.body);
     res.json({ message: "User created" });
 });
+
+// READ USERS
+app.get("/users", (req, res) => res.json(users));
+
+// UPDATE USER
 app.put("/users/:id", (req, res) => {
     const id = parseInt(req.params.id);
     users[id] = req.body;
     res.json({ message: "User updated" });
 });
+
+// DELETE USER
 app.delete("/users/:id", (req, res) => {
     const id = parseInt(req.params.id);
     users.splice(id, 1);
