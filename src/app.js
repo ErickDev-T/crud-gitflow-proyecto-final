@@ -38,9 +38,16 @@ app.delete("/users/:id", (req, res) => {
 });
 
 
+// Endpoint DELETE de prueba para la rama feature/delete-user
+app.delete("/delete-test", (req, res) => {
+    res.json({ msg: "Delete working" });
+});
+
+
 app.put("/update-test", (req, res) => res.json({ msg: "Update working" }));
 
 app.get("/read-test", (req, res) => res.json({ msg: "Read working" }));
+
 
 
 
